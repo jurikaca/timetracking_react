@@ -259,6 +259,84 @@ class App extends Component {
                     </div>
                 </div>
 
+                <div className={'modal fade'} id="TimeTrackerModal" role="dialog">
+                    <div className={'modal-dialog'}>
+
+                        <!-- Modal content-->
+                        <div className={'modal-content'}>
+                            <div className={'modal-header'}>
+                                <button className={'close'} id="close" data-dismiss="modal">&times;</button>
+                                <h4 className={'modal-title'}>
+                                    { this.state.free_time_log === true ? 'Log time without tracker' : 'Log time ' + this.state.time_logged}
+                                </h4>
+                            </div>
+                            <div className={'modal-body'}>
+                                <form onSubmit={saveTime}>
+                                    {
+                                        this.state.free_time_log === true
+                                        ?
+                                            <div className={'form-group'}>
+                                                <label>Time on hours</label>
+                                                <input type="number" className={'form-control'} id="time_hours_field" minLength={1} required={true} name="time_hours_field" placeholder="Add time on hours ex. 2.23 where 0.23 is 23% of one hour" onKeyUp={time_logged = formatTime(time_hours * 3600)} onChange={time_logged = formatTime(time_hours * 3600)}>
+                                                    {
+                                                        this.state.time_hours_field.errors && (this.state.time_hours_field.dirty || this.state.time_hours_field.touched)
+                                                            ?
+                                                            (
+                                                                <div className={'text-danger'}>
+                                                                    <div hidden={!this.state.time_hours_field.errors.required}>
+                                                                        Time is required in hours
+                                                                    </div>
+                                                                    <div hidden={!this.state.time_hours_field.errors.minlength}>
+                                                                        Please set a time more then 0 hours
+                                                                    </div>
+                                                                </div>
+                                                        )
+                                                        : null
+                                                    }
+                                            </div>
+                                    } : null
+                                    <div className={'form-group'}>
+                                        <label>Time to log</label>
+                                        <input type="text" className={'form-control'} id="time_logged" name="time_logged" placeholder="Enter time" disabled={true}>
+          </div>
+          <div className={'form-group'}>
+            <label>Date</label>
+            dt
+              {
+                  this.state.free_time_log != true
+                      ?
+                  <input type="text" className={'form-control'} id="date_finished" name="date_finished" placeholder="Date" defaultValue={formatDate(this.state.date_finished)} disabled={true}>
+                      : null
+              }
+          </div>
+          <div className={'form-group'}>
+            <label>Task Decription</label>
+            <textarea rows="4" className={'form-control is-invalid'} id="description_field" required name="description_field"></textarea>
+              {
+                  this.state.description_field.errors && (this.state.description_field.dirty || this.state.description_field.touched)
+                      ?
+                      <div className={'text-danger'}>
+                          <div hidden={!this.state.description_field.errors.required}>
+                              Description is required!
+                          </div>
+                      </div>
+                      : null
+              }
+          </div>
+
+                                </form>
+                            </div>
+                            <div className={'modal-footer'}>
+                                <button className={'btn btn-primary'} onClick={documentEditForm.ngSubmit.emit()} disabled={!documentEditForm.form.valid || this.state.loader === true}>
+                                  { this.state.loader === true ? 'Saving...' : 'Log Time' }
+                                </button>
+                                <button className={'btn btn-default'} data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+
+                      </div>
+                    </div>
+
                 <Table />
             </div>
         );
