@@ -3,6 +3,7 @@ import './Table.css';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faArrowDown from '@fortawesome/fontawesome-free-solid/faArrowDown';
 import faArrowUp from '@fortawesome/fontawesome-free-solid/faArrowUp';
+import Service from './../../Services/Service';
 
 class Table extends Component {
 
@@ -15,13 +16,18 @@ class Table extends Component {
             start: 0, // start value to paginate items on table
             limit: 10, // number of items to show per page
             items_length: 0, // total items length loaded from server
-            pagination: [], // array to store pagination buttons logic
+            pagination: [{
+                selected : true,
+            },{
+                selected : false,
+            }], // array to store pagination buttons logic
             times_logged: [], // table data loaded from server
-            order: {
+            order: { // order object to use when columns get click
                 field   : 'id', // the field to order
                 asc     : false // order type
-            } // order object to use when columns get click
+            }
         };
+        this.service = new Service();
         this.loadRecords();
     }
 
@@ -46,25 +52,30 @@ class Table extends Component {
         if(this.state.search !== ''){
             params['search'] = this.state.search;
         }
-        fetch("http://localhost:8000/time/get_time")
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    this.setState({
-                        loader : false,
-                        items_length : result.items_length,
-                        times_logged : result.data
-                    });
-                    this.paginate();
-                },
-                (error) => {
-                    this.setState({
-                        isLoaded: true,
-                        error
-                    });
-                }
-            );
+        if(this.state.loader === false){
+            this.setState({
+                loader: true
+            });
+        }
+        this.service.getItems(params, this.updateState);
+    };
 
+    updateState = (result) => {
+        let pagination = [];
+        if(result.items_length > this.state.limit){
+            for(let i=0; i<result.items_length; i += this.state.limit){
+                pagination.push({
+                    selected : this.state.start === i,
+                });
+            }
+        }
+
+        this.setState({
+            loader : false,
+            items_length : result.items_length,
+            times_logged : result.data,
+            pagination : pagination
+        });
     };
 
     /**
@@ -88,7 +99,7 @@ class Table extends Component {
                 }
             });
         }
-        this.loadRecords();
+        this.initTable();
     };
 
     /**
@@ -97,7 +108,7 @@ class Table extends Component {
     initTable = () => {
         this.setState({
             start : 0,
-            limit : 0
+            limit : 10
         });
         this.loadRecords();
     };
@@ -140,19 +151,9 @@ class Table extends Component {
     /**
      * function to create paginations array for loading pagination buttons
      */
-    paginate = () => {
-        let pagination = [];
-        if(this.state.items_length > this.state.limit){
-            for(let i=0; i<this.state.items_length; i += this.state.limit){
-                pagination.push({
-                    selected : this.state.start === i ? true : false,
-                });
-            }
-        }
-        this.setState({
-            pagination : pagination
-        });
-    };
+    // paginate = () => {
+    //
+    // };
 
     /**
      * function to round a number to bigest value
@@ -240,14 +241,13 @@ class Table extends Component {
                                                     Previous
                                                 </a>
                                             </li>
-                                            this.pagination.map((page, index) => (
-                                            <li className={'page-item ' + this.page.selected === true ? 'active' : ''}>
-                                                <a className={'page-link'} onClick={this.goToPage(this.index)}>
-                                                    { this.index+1 }
-                                                </a>
-                                            </li>
-                                            ))
-
+                                            {this.state.pagination.map((page, index) => {
+                                                return <li className={'page-item ' + page.selected === true ? 'active' : ''}>
+                                                    <a className={'page-link'}>
+                                                        { index+1 }
+                                                    </a>
+                                                </li>;
+                                            })}
                                             <li className={'page-item'}>
                                                 <a className={'page-link'} onClick={this.goNext}>
                                                     Next

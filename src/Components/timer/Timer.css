@@ -1,0 +1,15 @@
+th{
+  cursor: pointer;
+}
+.actions {
+  margin-bottom: 10px;
+}
+.actions>div {
+  display:inline-block;
+}
+.right{
+  float: right;
+}
+.margin-top{
+  margin-top: 15px;
+}
