@@ -16,41 +16,30 @@ class Table extends Component {
             start: 0, // start value to paginate items on table
             limit: 10, // number of items to show per page
             items_length: 0, // total items length loaded from server
-            pagination: [{
-                selected : true,
-            },{
-                selected : false,
-            }], // array to store pagination buttons logic
+            pagination: [], // array to store pagination buttons logic
             times_logged: [], // table data loaded from server
             order: { // order object to use when columns get click
                 field   : 'id', // the field to order
                 asc     : false // order type
             }
         };
-        this.service = new Service();
-        this.loadRecords();
-    }
-
-    /**
-     * runs everytime the component gets rendered
-     */
-    componentWillMount(){
-
+        this.service = new Service(); // create new service reference
+        this.loadRecords(this.state); // api call to get list of time logged
     }
 
     /**
      * function to get table data from server
      */
-    loadRecords = () => {
+    loadRecords = (input_params) => {
         let params = {};
-        params['start'] = this.state.start;
-        params['limit'] = this.state.limit;
-        if(this.state.order.field !== ''){
-            params['field'] = this.state.order.field;
-            params['asc'] = this.state.order.asc;
+        params['start'] = input_params.start;
+        params['limit'] = input_params.limit;
+        if(input_params.order.field !== ''){
+            params['field'] = input_params.order.field;
+            params['asc'] = input_params.order.asc;
         }
-        if(this.state.search !== ''){
-            params['search'] = this.state.search;
+        if(input_params.search !== ''){
+            params['search'] = input_params.search;
         }
         if(this.state.loader === false){
             this.setState({
@@ -60,9 +49,14 @@ class Table extends Component {
         this.service.getItems(params, this.updateState);
     };
 
+    /**
+     * callback function after the response from server on this.loadRecords method
+     *
+     * @param result, response object from server
+     */
     updateState = (result) => {
         let pagination = [];
-        if(result.items_length > this.state.limit){
+        if(result.items_length > this.state.limit){ // create pagination array
             for(let i=0; i<result.items_length; i += this.state.limit){
                 pagination.push({
                     selected : this.state.start === i,
@@ -71,10 +65,10 @@ class Table extends Component {
         }
 
         this.setState({
-            loader : false,
-            items_length : result.items_length,
-            times_logged : result.data,
-            pagination : pagination
+            loader : false, // hide loader
+            items_length : result.items_length, // total items length
+            times_logged : result.data, // table rows data
+            pagination : pagination // pagination array
         });
     };
 
@@ -99,7 +93,7 @@ class Table extends Component {
                 }
             });
         }
-        this.initTable();
+        this.initTable(); // reinit table
     };
 
     /**
@@ -107,10 +101,14 @@ class Table extends Component {
      */
     initTable = () => {
         this.setState({
-            start : 0,
-            limit : 10
+            start : 0
         });
-        this.loadRecords();
+        this.loadRecords({
+            start : 0,
+            limit : this.state.limit,
+            order: this.state.order,
+            search: this.state.search
+        });
     };
 
     /**
@@ -121,7 +119,12 @@ class Table extends Component {
             this.setState({
                 start : this.state.start + this.state.limit
             });
-            this.loadRecords();
+            this.loadRecords({
+                start : this.state.start + this.state.limit,
+                limit : this.state.limit,
+                order: this.state.order,
+                search: this.state.search
+            });
         }
     };
 
@@ -133,7 +136,12 @@ class Table extends Component {
             this.setState({
                 start : this.state.start - this.state.limit
             });
-            this.loadRecords();
+            this.loadRecords({
+                start : this.state.start - this.state.limit,
+                limit : this.state.limit,
+                order: this.state.order,
+                search: this.state.search
+            });
         }
     };
 
@@ -142,27 +150,26 @@ class Table extends Component {
      * @param page_num, page number to navigate
      */
     goToPage = (page_num) => {
-        this.setState({
-            start : this.state.limit * page_num
+        this.loadRecords({
+            start : this.state.limit * page_num,
+            limit : this.state.limit,
+            order: this.state.order,
+            search: this.state.search
         });
-        this.loadRecords();
     };
 
-    /**
-     * function to create paginations array for loading pagination buttons
-     */
-    // paginate = () => {
-    //
-    // };
-
-    /**
-     * function to round a number to bigest value
-     *
-     * @param value, number to round
-     * @returns {number}
-     */
-    round = (value) => {
-        return Math.ceil(value);
+    search = (e) => {
+        this.setState({
+            start : 0,
+            limit : 10,
+            search: e.target.value
+        });
+        this.loadRecords({
+            start : 0,
+            limit : 10,
+            order: this.state.order,
+            search: e.target.value
+        });
     };
 
     render() {
@@ -174,16 +181,11 @@ class Table extends Component {
                             <h3 className={'panel-title center'}>History of time logged</h3>
                         </div>
                         <div className={'panel-body'}>
-
-                            <div className={'actions'}>
-                                {this.state.items_length > 0 ?
-                                    <div>
-                                        <label>Showing items { this.state.start + 1 } - { this.state.start + this.state.limit } of { this.state.items_length }</label>
-                                    </div>
-                                    : null}
-                                <div className={'right'}>
-                                    <input className={'form-control input-sm'} name="search" id="search" placeholder="Search..." onKeyUp={this.initTable}/>
-                                </div>
+                            {this.state.items_length > 0 && this.state.items_length > this.state.limit ?
+                                <label>Showing items { this.state.start + 1 } - { this.state.start + this.state.limit } of { this.state.items_length }</label>
+                                : null}
+                            <div className={'right actions'}>
+                                <input className={'form-control input-sm'} name="search" id="search" placeholder="Search..." onChange={() => {this.search.bind(this)}}/>
                             </div>
                             <table className={'table table-bordered'}>
                                 <thead>
@@ -214,11 +216,11 @@ class Table extends Component {
                                 {
                                     this.state.loader !== true
                                         ?
-                                        this.state.times_logged.map(row => (
-                                                <tr>
+                                        this.state.times_logged.map((row, index) => (
+                                                <tr key={index}>
                                                     <td>{ row.id }</td>
-                                                    <td>{ row.date_finished.date }</td>
-                                                    <td>{ row.time_tracked_formatted.date }</td>
+                                                    <td>{ row.date_finished }</td>
+                                                    <td>{ row.time_tracked_formatted }</td>
                                                     <td>{ row.description }</td>
                                                 </tr>
                                             )
@@ -230,26 +232,26 @@ class Table extends Component {
 
                                 </tbody>
                             </table>
-                            { this.state.items_length > 0 ? <div><label>Page { this.round(this.state.start / this.state.limit) + 1 } of { this.round(this.state.items_length / this.state.limit) }</label></div> : null }
+                            { this.state.items_length > 0 ? <div><label>Page { Math.ceil(this.state.start / this.state.limit) + 1 } of { Math.ceil(this.state.items_length / this.state.limit) }</label></div> : null }
 
                             { this.state.pagination.length > 0
                                 ? (
                                     <nav>
                                         <ul className={'pagination'}>
                                             <li className={'page-item'}>
-                                                <a className={'page-link'} onClick={this.goPrev}>
+                                                <a className={'page-link'} onClick={() => {this.goPrev()}}>
                                                     Previous
                                                 </a>
                                             </li>
                                             {this.state.pagination.map((page, index) => {
-                                                return <li className={'page-item ' + page.selected === true ? 'active' : ''}>
-                                                    <a className={'page-link'}>
+                                                return <li className={'page-item ' + page.selected === true ? 'active' : ''} key={index}>
+                                                    <a className={'page-link'} onClick={() => {this.goToPage(index)}}>
                                                         { index+1 }
                                                     </a>
                                                 </li>;
                                             })}
                                             <li className={'page-item'}>
-                                                <a className={'page-link'} onClick={this.goNext}>
+                                                <a className={'page-link'} onClick={() => {this.goNext()}}>
                                                     Next
                                                 </a>
                                             </li>

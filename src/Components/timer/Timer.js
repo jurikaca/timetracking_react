@@ -135,6 +135,7 @@ class Timer extends Component {
             description : '',
             time_logged : this.state.time_tracked
         });
+        this.props.setSeconds(this.state.seconds);
         this.props.setDateFinished(new Date());
         this.props.setFreeTimeLog(false);
         this.props.setTimeLogged(this.state.time_tracked);
@@ -164,13 +165,12 @@ class Timer extends Component {
     };
 
     render() {
-        console.log(this.props.items);
         return (
             <div className="Timer">
                 <div className={'container'}>
                     <div className={'row'}>
                         <div className={'col-md-12'}>
-                            <button className={'btn btn-primary'} onClick={this.logFreeTime}>
+                            <button className={'btn btn-primary'} onClick={() => {this.logFreeTime()}}>
                                 Log free time
                             </button>
                         </div>
@@ -180,18 +180,18 @@ class Timer extends Component {
                               </span>
                             <div>
                                 {this.state.is_stopped === false ?
-                                    <button className={'btn btn-default'} onClick={this.state.is_started === false ? this.startTimer : (this.state.is_paused === true ? this.resumeTimer : this.pauseTimer)}>
+                                    <button className={'btn btn-default margin-left'} onClick={() => {this.state.is_started === false ? this.startTimer() : (this.state.is_paused === true ? this.resumeTimer() : this.pauseTimer())}}>
                                         <FontAwesomeIcon icon={this.state.is_started === false ? faPlay : (this.state.is_paused === true ? faPlayCircle : faPause)} />
                                     </button>
                                     : null}
                                 {this.state.is_started === true ?
-                                    <button className={'btn btn-'+ (this.state.is_stopped === true ? 'primary' : 'default') } onClick={this.state.is_stopped === true ? this.logTrackedTime : this.stopTimer}>
+                                    <button className={'btn margin-left btn-'+ (this.state.is_stopped === true ? 'primary' : 'default') } onClick={() => {this.state.is_stopped === true ? this.logTrackedTime() : this.stopTimer()}}>
                                         {this.state.is_stopped === false ? <FontAwesomeIcon className={'red'} icon={faStop} /> : null}
                                         { this.state.is_stopped === true ? 'Log Time' : ''}
                                     </button>
                                     : null}
                                 {this.state.is_stopped === true ?
-                                    <button className={'btn btn-default'} onClick={this.resetTimer}>
+                                    <button className={'btn btn-default margin-left'} onClick={() => {this.resetTimer()}}>
                                         Reset
                                     </button>
                                     : null}

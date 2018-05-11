@@ -1,11 +1,15 @@
-import React from 'react';
-
 export default class Service {
 
     constructor(){
-        this.SERVER_URL = 'http://localhost:8000/';
+        this.SERVER_URL = 'http://localhost:8000/'; // server url for api
     }
 
+    /**
+     * get items from server, save time logged on db
+     *
+     * @param data, data to filter
+     * @param callback, callback function to call after server response
+     */
     getItems = (data, callback) => {
         let query = '?';
         for(let key in data){
@@ -26,8 +30,14 @@ export default class Service {
             );
     };
 
+    /**
+     * post data to server, save time logged on db
+     *
+     * @param data, data to post
+     * @param callback, callback function to call after server response
+     */
     saveTime = (data, callback) => {
-        var form = new FormData();
+        let form = new FormData();
         for(let key in data){
             form.append(key, data[key]);
         }
@@ -85,14 +95,14 @@ export default class Service {
      */
     formatDate = (date_input) => {
         date_input = new Date(date_input);
-        var dd = date_input.getDate();
-        var mm = date_input.getMonth()+1; //January is 0!
-        var hh = date_input.getHours();
-        var ii = date_input.getMinutes();
-        var ss = date_input.getSeconds();
+        let dd = date_input.getDate();
+        let mm = date_input.getMonth()+1; //January is 0!
+        let hh = date_input.getHours();
+        let ii = date_input.getMinutes();
+        let ss = date_input.getSeconds();
 
-        var yyyy = date_input.getFullYear();
-        var date = ''+yyyy+'-';
+        let yyyy = date_input.getFullYear();
+        let date = ''+yyyy+'-';
         if(mm<10){
             date += '0'+mm+'-';
         }else{

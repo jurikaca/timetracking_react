@@ -13,3 +13,6 @@ th{
 .margin-top{
   margin-top: 15px;
 }
+.page-link{
+  cursor: pointer;
+}

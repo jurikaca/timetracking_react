@@ -9,63 +9,90 @@ class Modal extends Component {
     constructor(){
         super();
         this.state = {
-            time_hours: 0,
-            date: new Date(),
-            description: ''
+            time_hours: 0, // time in hours if free time is logged
+            date: new Date(), // date fo datepicker
+            description: '', // description of time logged
+            time_logged: '00:00:00' // time format for tracked time
         };
         this.service = new Service();
     }
 
+    /**
+     * function to return validation rules for form fields
+     *
+     * @param description, description field value
+     * @param time_hours, time_hours field value
+     *
+     * @returns {{description: boolean, time_hours: boolean}}, object containing validations
+     */
     validate = (description, time_hours) => {
         return {
-            description: description.length <= 0,
-            time_hours: time_hours <= 0
+            description: description.length <= 0, // dexcription is required
+            time_hours: time_hours <= 0 // time_hours should be more bigger then 0
         };
     };
 
+    /**
+     * function to check if the form is valid
+     * @returns {boolean}
+     */
     canBeSubmitted = () => {
         const errors = this.validate(this.state.description, this.state.password);
         const isDisabled = Object.keys(errors).some(x => errors[x]);
         return !isDisabled;
-    }
+    };
 
     /**
      * function to log time, post data to server for storing time logged
      */
     saveTime = () => {
-        this.setState({
-            loader: true
-        });
-        let seconds = this.props.free_time_log === true ? Math.round(this.state.time_hours * 3600) : this.state.seconds;
+        // if(this.canBeSubmitted()){
+            this.setState({
+                loader: true
+            });
+            let seconds = this.props.free_time_log === true ? Math.round(this.state.time_hours * 3600) : this.props.seconds;
 
-        console.log(this.props.date_finished);
-        this.service.saveTime({
-            seconds                 :   seconds,
-            date_finished           :   this.props.date_finished,
-            time_tracked_formatted  :   this.service.formatTime(seconds),
-            description             :   this.state.description
-        }, this.updateState);
-        this.props.reInitTable();
+            this.service.saveTime({
+                seconds                 :   seconds,
+                date_finished           :   this.props.date_finished,
+                time_tracked_formatted  :   this.service.formatTime(seconds),
+                description             :   this.state.description
+            }, this.updateState);
+            this.props.reInitTable();
+        // }
     };
 
+    /**
+     * callback function after the response from server on this.saveTime method
+     *
+     * @param result, response object from server
+     */
     updateState = (result) => {
         this.setState({
             loader : false
         });
         if(result.success){
             $('#close').click();
-            // this.toasterService.pop('success', 'Success', result.msg);
-            this.props.resetTimer();
-            this.props.reInitTable();
+            alert(result.msg);
+            this.props.resetTimer(); // reset timer
+            this.props.reInitTable(); // reinitialize table data
         }else{
             console.log(result);
         }
     };
 
+    /**
+     * binding of description change input
+     * @param e
+     */
     handleDescriptionChange(e) {
         this.setState({ description: e.target.value });
     }
 
+    /**
+     * binding of time_hours change input
+     * @param e
+     */
     handleTimeHoursChange = (e) => {
         this.setState({
             time_hours: e.target.value
@@ -73,14 +100,18 @@ class Modal extends Component {
         this.props.setTimeLogged(this.service.formatTime(e.target.value * 3600));
     };
 
-    dateFinishedChange = date => {
+    /**
+     * binding of date_finished change input
+     * @param e
+     */
+    handleDateFinishedChange = date => {
         this.setState({ date });
         this.props.setDateFinished(date);
     };
 
     render() {
-        const errors = this.validate(this.state.description, this.state.time_hours);
-        const isDisabled = Object.keys(errors).some(x => errors[x]);
+        const errors = this.validate(this.state.description, this.state.time_hours); // calculate form errors
+        const isDisabled = Object.keys(errors).some(x => errors[x]); // isDisable property for submit button
 
         return (
             <div className={'modal fade'} id="TimeTrackerModal" role="dialog">
@@ -93,9 +124,9 @@ class Modal extends Component {
                             </h4>
                         </div>
                         <div className={'modal-body'}>
-                            <form onSubmit={this.saveTime}>
+                            <form onSubmit={() => {this.saveTime()}}>
                                 {this.props.free_time_log === true ?
-                                    [
+                                    (
                                         <div className={'form-group'}>
                                             <label>Time on hours</label>
                                             <input type="number" value={this.state.time_hours}
@@ -106,7 +137,7 @@ class Modal extends Component {
                                                 </div>
                                             </div>
                                         </div>
-                                    ]
+                                    )
                                     : null}
                                 <div className={'form-group'}>
                                     <label>Time to log</label>
@@ -116,12 +147,12 @@ class Modal extends Component {
                                     <label>Date</label>
                                     <br/>
                                     {
-                                        this.props.free_time_log != true
+                                        this.props.free_time_log !== true
                                             ?
                                             <input type="text" className={'form-control'} id="date_finished" name="date_finished" placeholder="Date" value={this.props.date_finished} disabled={true} />
                                             :
                                             <DateTimePicker
-                                                onChange={this.dateFinishedChange}
+                                                onChange={ this.handleDateFinishedChange.bind(this) }
                                                 value={this.state.date}
                                             />
                                     }
@@ -141,7 +172,7 @@ class Modal extends Component {
                             </form>
                         </div>
                         <div className={'modal-footer'}>
-                            <button className={'btn btn-primary'} onClick={this.saveTime} disabled={this.state.loader === true} disabled={isDisabled}>
+                            <button className={'btn btn-primary'} onClick={() => {this.saveTime()}} disabled={this.state.loader === true && isDisabled}>
                                 { this.state.loader === true ? 'Saving...' : 'Log Time' }
                             </button>
                             <button className={'btn btn-default'} data-dismiss="modal">Close</button>
